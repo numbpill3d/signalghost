@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIGNAL_GHOST.exe - UNAUTHORIZED ACCESS</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: #000;
+            color: #fff;
+            overflow-x: hidden;
+            cursor: crosshair;
+        }
+        
+        #three-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        .glitch {
+            animation: glitch 2s infinite;
+        }
+        
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+        
+        .scanline {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .scanline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #fff, transparent);
+            animation: scan 3s infinite;
+        }
+        
+        @keyframes scan {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+            max-width: 100vw;
+        }
+        
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(0,0,0,0.9);
+            border: 1px solid #333;
+        }
+        
+        .header {
+            padding: 1rem;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.95);
+        }
+        
+        .nav-tabs {
+            display: flex;
+            gap: 0;
+        }
+        
+        .tab {
+            padding: 0.5rem 1rem;
+            background: #111;
+            border: 1px solid #333;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .tab.active {
+            background: #000;
+            color: #fff;
+            border-bottom: 1px solid #000;
+        }
+        
+        .tab:hover {
+            background: #222;
+            color: #fff;
+            box-shadow: 0 0 10px rgba(255,255,255,0.1);
+        }
+        
+        .content-area {
+            display: flex;
+            flex: 1;
+        }
+        
+        .sidebar {
+            width: 300px;
+            background: rgba(0,0,0,0.95);
+            border-right: 1px solid #333;
+            padding: 1rem;
+            overflow-y: auto;
+            max-height: calc(100vh - 200px);
+        }
+        
+        .sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .sidebar::-webkit-scrollbar-track {
+            background: #111;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+        
+        .main-panel {
+            flex: 1;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .profile-section {
+            display: flex;
+            gap: 1rem;
+            border: 1px solid #333;
+            padding: 1rem;
+            background: rgba(0,0,0,0.8);
+        }
+        
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            background: #111;
+            border: 2px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .profile-avatar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .profile-info {
+            flex: 1;
+        }
+        
+        .profile-info h2 {
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+        
+        .status-bar {
+            display: flex;
+            gap: 1rem;
+            margin: 0.5rem 0;
+            font-size: 0.8rem;
+        }
+        
+        .status-item {
+            padding: 0.2rem 0.5rem;
+            background: #111;
+            border: 1px solid #333;
+        }
+        
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .gallery-item {
+            aspect-ratio: 1;
+            background: #111;
+            border: 1px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .gallery-item:hover {
+            transform: scale(1.05);
+            border-color: #fff;
+            box-shadow: 0 0 20px rgba(255,255,255,0.2);
+        }
+        
+        .gallery-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 49%, rgba(255,255,255,0.1) 50%, transparent 51%);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+        }
+        
+        .gallery-item:hover::before {
+            transform: translateX(100%);
+        }
+        
+        .sidebar-section {
+            margin-bottom: 1.5rem;
+            border: 1px solid #333;
+            background: rgba(0,0,0,0.8);
+        }
+        
+        .sidebar-header {
+            padding: 0.5rem;
+            background: #111;
+            border-bottom: 1px solid #333;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .sidebar-content {
+            padding: 0.5rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .sidebar-content ul {
+            list-style: none;
+        }
+        
+        .sidebar-content li {
+            padding: 0.2rem 0;
+            border-bottom: 1px solid #222;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-content li:hover {
+            color: #fff;
+            transform: translateX(5px);
+        }
+        
+        .sidebar-content li::before {
+            content: '> ';
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .sidebar-content li:hover::before {
+            opacity: 1;
+        }
+        
+        .scrollbox {
+            height: 200px;
+            overflow-y: scroll;
+            border: 1px solid #333;
+            padding: 1rem;
+            background: rgba(0,0,0,0.8);
+            font-family: monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        .scrollbox::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .scrollbox::-webkit-scrollbar-track {
+            background: #111;
+        }
+        
+        .scrollbox::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+        
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: rgba(0,0,0,0.95);
+            border: 2px solid #333;
+            padding: 2rem;
+            z-index: 1000;
+            transition: all 0.3s;
+            max-width: 80vw;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .popup.active {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 999;
+            display: none;
+        }
+        
+        .popup-overlay.active {
+            display: block;
+        }
+        
+        .ascii-art {
+            font-family: monospace;
+            font-size: 0.7rem;
+            line-height: 1;
+            white-space: pre;
+            color: #666;
+        }
+        
+        .terminal-input {
+            background: #000;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 0.5rem;
+            font-family: inherit;
+            width: 100%;
+            margin: 0.5rem 0;
+        }
+        
+        .terminal-input:focus {
+            outline: none;
+            border-color: #fff;
+            box-shadow: 0 0 10px rgba(255,255,255,0.1);
+        }
+        
+        .blink {
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .footer {
+            padding: 1rem;
+            border-top: 1px solid #333;
+            background: rgba(0,0,0,0.95);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+        
+        .matrix-rain {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        
+        .matrix-char {
+            position: absolute;
+            color: #0f0;
+            font-family: monospace;
+            animation: fall linear infinite;
+        }
+        
+        @keyframes fall {
+            0% { transform: translateY(-100vh); opacity: 1; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                max-height: 200px;
+            }
+            
+            .content-area {
+                flex-direction: column;
+            }
+            
+            .profile-section {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .gallery {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="three-canvas"></canvas>
+    
+    <div class="container">
+        <div class="main-content">
+            <header class="header glitch scanline">
+                <div>
+                    <span class="blink">[SIGNAL_GHOST]</span> - UNAUTHORIZED_ACCESS.exe
+                </div>
+                <div>
+                    STATUS: <span style="color: #0f0;">CONNECTED</span> | 
+                    UPTIME: <span id="uptime">00:00:00</span>
+                </div>
+            </header>
+            
+            <nav class="nav-tabs">
+                <div class="tab active" onclick="switchTab('profile')">PROFILE.dat</div>
+                <div class="tab" onclick="switchTab('gallery')">GALLERY.bin</div>
+                <div class="tab" onclick="switchTab('logs')">SYSTEM.log</div>
+                <div class="tab" onclick="switchTab('terminal')">TERMINAL.exe</div>
+            </nav>
+            
+            <div class="content-area">
+                <aside class="sidebar">
+                    <div class="sidebar-section">
+                        <div class="sidebar-header" onclick="toggleSection(this)">
+                            <span>NAVIGATION.sys</span>
+                            <span>[-]</span>
+                        </div>
+                        <div class="sidebar-content">
+                            <ul>
+                                <li onclick="showPopup('access')">ACCESS_LOGS</li>
+                                <li onclick="showPopup('camera')">CAMERA_HIJACK</li>
+                                <li onclick="showPopup('network')">NETWORK_MAP</li>
+                                <li onclick="showPopup('decrypt')">DECRYPT_FILES</li>
+                                <li onclick="showPopup('ghost')">GHOST_PROTOCOL</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="sidebar-section">
+                        <div class="sidebar-header" onclick="toggleSection(this)">
+                            <span>ACTIVE_CONNECTIONS</span>
+                            <span>[-]</span>
+                        </div>
+                        <div class="sidebar-content">
+                            <ul>
+                                <li>NODE_001: SHIBUYA_CAM</li>
+                                <li>NODE_002: METRO_FEED</li>
+                                <li>NODE_003: TRAFFIC_SYS</li>
+                                <li>NODE_004: ATM_NETWORK</li>
+                                <li>NODE_005: BILLBOARD_CTRL</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="sidebar-section">
+                        <div class="sidebar-header" onclick="toggleSection(this)">
+                            <span>INTERCEPTED_DATA</span>
+                            <span>[-]</span>
+                        </div>
+                        <div class="sidebar-content">
+                            <div class="scrollbox">
+                                <div>PACKET_001: encrypted_payload.bin</div>
+                                <div>PACKET_002: surveillance_matrix.dat</div>
+                                <div>PACKET_003: neural_pattern.hex</div>
+                                <div>PACKET_004: quantum_signature.key</div>
+                                <div>PACKET_005: void_transmission.raw</div>
+                                <div>PACKET_006: ghost_frequency.wav</div>
+                                <div>PACKET_007: liminal_space.obj</div>
+                                <div>PACKET_008: reality_glitch.mesh</div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+                
+                <main class="main-panel">
+                    <div id="profile-tab" class="tab-content active">
+                        <div class="profile-section">
+                            <div class="profile-avatar">
+                                <div class="ascii-art">
+  ░░░░░░░░░░░░░░░░░
+  ░░██░░░░░░░░██░░░
+  ░░████░░░░████░░░
+  ░░░░░░████░░░░░░░
+  ░░░░██████████░░░
+  ░░██░░░██░░░██░░░
+  ░░░░░░░░░░░░░░░░░
+                                </div>
+                            </div>
+                            <div class="profile-info">
+                                <h2>SIGNAL_GHOST <span class="blink">_</span></h2>
+                                <p>CODENAME: Urban Static Phantom</p>
+                                <p>CLEARANCE: CLASSIFIED</p>
+                                <p>LAST_SEEN: Shinjuku Node_7 at 03:47:12</p>
+                                
+                                <div class="status-bar">
+                                    <div class="status-item">STEALTH: ACTIVE</div>
+                                    <div class="status-item">ENCRYPTION: AES-256</div>
+                                    <div class="status-item">PROXY: ONION_LAYER_7</div>
+                                </div>
+                                
+                                <p style="margin-top: 1rem;">
+                                    Cybernetic entity manifesting in liminal digital spaces. 
+                                    Specializing in urban surveillance hijacking and converting 
+                                    city infrastructure into interactive narrative experiences.
+                                    Current objective: Document the void between signals.
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="scrollbox">
+                            <div style="color: #0f0;">[BOOT_SEQUENCE_INITIATED]</div>
+                            <div>Loading neural_interface.dll... OK</div>
+                            <div>Establishing quantum_tunnel... OK</div>
+                            <div>Bypassing firewall_matrix... OK</div>
+                            <div>Injecting ghost_protocol... OK</div>
+                            <div style="color: #f00;">[WARNING] Reality corruption detected</div>
+                            <div>Compensating for dimensional drift... OK</div>
+                            <div>Synchronizing with city_neural_network... OK</div>
+                            <div style="color: #0f0;">[SIGNAL_GHOST online - All systems nominal]</div>
+                            <div>Monitoring 847 active nodes...</div>
+                            <div>Intercepting 1,247 data streams...</div>
+                            <div>Processing ambient city consciousness...</div>
+                        </div>
+                    </div>
+                    
+                    <div id="gallery-tab" class="tab-content">
+                        <h3>INTERCEPTED_TRANSMISSIONS.gallery</h3>
+                        <div class="gallery">
+                            <div class="gallery-item" onclick="showPopup('img1')">
+                                <div class="ascii-art">
+████████████████
+█▄─▄▄─█▄─▀█▀─▄█
+██─▄▄▄██─█▄█─██
+▀▄▄▄▀▀▀▄▄▄▀▄▄▄▀
+                                </div>
+                            </div>
+                            <div class="gallery-item" onclick="showPopup('img2')">
+                                <div class="ascii-art">
+░░░░░░░░░░░░░░░░
+░░██████████░░░░
+░░██░░░░░░██░░░░
+░░██░░██░░██░░░░
+░░██░░░░░░██░░░░
+░░██████████░░░░
+░░░░░░░░░░░░░░░░
+                                </div>
+                            </div>
+                            <div class="gallery-item" onclick="showPopup('img3')">
+                                <div class="ascii-art">
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▓░░░░░░░░░░░░░░▓
+▓░▓▓▓▓▓▓▓▓▓▓▓░▓
+▓░▓░░░░░░░░░▓░▓
+▓░▓░▓▓▓▓▓▓░▓░▓
+▓░▓░░░░░░░░▓░▓
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+                                </div>
+                            </div>
+                            <div class="gallery-item" onclick="showPopup('img4')">
+                                <div class="ascii-art">
+◢◤◢◤◢◤◢◤◢◤◢◤
+◤◢◤◢◤◢◤◢◤◢◤◢
+◢◤◢◤◢◤◢◤◢◤◢◤
+◤◢◤◢◤◢◤◢◤◢◤◢
+◢◤◢◤◢◤◢◤◢◤◢◤
+◤◢◤◢◤◢◤◢◤◢◤◢
+                                </div>
+                            </div>
+                            <div class="gallery-item" onclick="showPopup('img5')">
+                                <div class="ascii-art">
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⢀⣴⣾⣿⣿⣿⣿⣿⣶⡄⠀⠀⠀⠀⠀
+⠀⠀⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⡆⠀⠀⠀⠀
+⠀⠀⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀
+⠀⠀⢻⣿⣿⣿⣿⣿⣿⣿⣿⡿⠀⠀⠀⠀⠀
+⠀⠀⠈⠻⢿⣿⣿⣿⡿⠟⠋⠀⠀⠀⠀⠀⠀
+                                </div>
+                            </div>
+                            <div class="gallery-item" onclick="showPopup('img6')">
+                                <div class="ascii-art">
+┌─┐┌─┐┌─┐┌─┐┌─┐┌─┐
+│ ││ ││ ││ ││ ││ │
+├─┤├─┤├─┤├─┤├─┤├─┤
+│ ││ ││ ││ ││ ││ │
+└─┘└─┘└─┘└─┘└─┘└─┘
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="scrollbox">
+                            <h4>METADATA_EXTRACTION:</h4>
+                            <div>FILE: ghost_signal_001.raw</div>
+                            <div>SIZE: 2,847,293 bytes</div>
+                            <div>TIMESTAMP: 2025-05-26_03:47:12</div>
+                            <div>ENCRYPTION: QUANTUM_OBFUSCATED</div>
+                            <div>SOURCE: SHIBUYA_CROSSING_CAM_07</div>
+                            <div>ANOMALY_DETECTED: Temporal displacement +0.003s</div>
+                            <div>---</div>
+                            <div>FILE: void_transmission_alpha.hex</div>
+                            <div>SIZE: UNDEFINED</div>
+                            <div>TIMESTAMP: ERROR_TEMPORAL_PARADOX</div>
+                            <div>ENCRYPTION: REALITY_CIPHER</div>
+                            <div>SOURCE: LIMINAL_SPACE_NODE_UNKNOWN</div>
+                            <div>ANOMALY_DETECTED: Non-euclidean geometry</div>
+                        </div>
+                    </div>
+                    
+                    <div id="logs-tab" class="tab-content">
+                        <h3>SYSTEM.log - Real-time monitoring</h3>
+                        <div class="scrollbox" id="log-container">
+                            <div>[03:47:12] Ghost protocol initialized</div>
+                            <div>[03:47:13] Connecting to urban neural network...</div>
+                            <div>[03:47:14] Bypassing security layer 1/7</div>
+                            <div>[03:47:15] Bypassing security layer 2/7</div>
+                            <div>[03:47:16] Bypassing security layer 3/7</div>
+                            <div>[03:47:17] <span style="color: #f00;">[WARNING]</span> Anomalous signal detected</div>
+                            <div>[03:47:18] Bypassing security layer 4/7</div>
+                            <div>[03:47:19] Injecting surveillance override...</div>
+                            <div>[03:47:20] Camera feed intercepted: SHIBUYA_001</div>
+                            <div>[03:47:21] Camera feed intercepted: HARAJUKU_003</div>
+                            <div>[03:47:22] <span style="color: #0f0;">[SUCCESS]</span> Ghost mode activated</div>
+                            <div>[03:47:23] Monitoring city consciousness...</div>
+                            <div>[03:47:24] Detected: 1,847 active nodes</div>
+                            <div>[03:47:25] Detected: 247 liminal spaces</div>
+                            <div>[03:47:26] <span style="color: #f00;">[ALERT]</span> Reality flux detected in sector 7</div>
+                        </div>
+                        
+                        <input type="text" class="terminal-input" placeholder="Enter command..." onkeypress="handleCommand(event)">
+                    </div>
+                    
+                    <div id="terminal-tab" class="tab-content">
+                        <h3>TERMINAL.exe - Direct system access</h3>
+                        <div class="scrollbox" id="terminal-output">
+                            <div>SIGNAL_GHOST Terminal v2.7.3</div>
+                            <div>Type 'help' for available commands</div>
+                            <div></div>
+                            <div>ghost@shinjuku:~$ <span class="blink">_</span></div>
+                        </div>
+                        
+                        <input type="text" class="terminal-input" id="terminal-input" placeholder="ghost@shinjuku:~$ " onkeypress="handleTerminal(event)">
+                    </div>
+                </main>
+            </div>
+            
+            <footer class="footer">
+                <div>
+                    CONNECTION: ENCRYPTED | LOCATION: OBFUSCATED | TRACE: IMPOSSIBLE
+                </div>
+                <div>
+                    <span class="glitch">SIGNAL_GHOST.exe</span> - Version 2.7.3
+                </div>
+            </footer>
+        </div>
+    </div>
+    
+    <!-- Popups -->
+    <div class="popup-overlay" onclick="closePopup()"></div>
+    <div class="popup" id="popup">
+        <div id="popup-content"></div>
+        <button onclick="closePopup()" style="position: absolute; top: 10px; right: 10px; background: none; border: 1px solid #333; color: #fff; padding: 5px 10px; cursor: pointer;">X</button>
+    </div>
+    
+    <script>
+        // Three.js particle system
+        let scene, camera, renderer, particles, particleSystem;
+        let mouseX = 0, mouseY = 0;
+        
+        function initThree() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('three-canvas'), alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x000000, 0);
+            
+            // Create particle system
+            const particleCount = 2000;
+            const positions = new Float32Array(particleCount * 3);
+            const colors = new Float32Array(particleCount * 3);
+            const sizes = new Float32Array(particleCount);
+            
+            for (let i = 0; i < particleCount; i++) {
+                positions[i * 3] = (Math.random() - 0.5) * 2000;
+                positions[i * 3 + 1] = (Math.random() - 0.5) * 2000;
+                positions[i * 3 + 2] = (Math.random() - 0.5) * 2000;
+                
+                colors[i * 3] = Math.random();
+                colors[i * 3 + 1] = Math.random();
+                colors[i * 3 + 2] = Math.random();
+                
+                sizes[i] = Math.random() * 3 + 1;
+            }
+            
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+            
+            const material = new THREE.ShaderMaterial({
+                uniforms: {
+                    time: { value: 0 },
+                    mouse: { value: new THREE.Vector2() }
+                },
+                vertexShader: `
+                    attribute float size;
+                    attribute vec3 color;
+                    varying vec3 vColor;
+                    uniform float time;
+                    uniform vec2 mouse;
+                    
+                    void main() {
+                        vColor = color;
+                        vec3 pos = position;
+                        
+                        // Pulsing effect
+                        pos.x += sin(time * 0.001 + pos.y * 0.01) * 10.0;
+                        pos.y += cos(time * 0.001 + pos.x * 0.01) * 10.0;
+                        
+                        // Mouse interaction
+                        float dist = distance(pos.xy, mouse * 100.0);
+                        if (dist < 50.0) {
+                            pos.z += (50.0 - dist) * 2.0;
+                        }
+                        
+                        vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+                        gl_Position = projectionMatrix * mvPosition;
+                        gl_PointSize = size * (300.0 / -mvPosition.z);
+                    }
+                `,
+                fragmentShader: `
+                    varying vec3 vColor;
+                    uniform float time;
+                    
+                    void main() {
+                        vec2 center = gl_PointCoord - vec2(0.5);
+                        float dist = length(center);
+                        
+                        if (dist > 0.5) discard;
+                        
+                        float alpha = 1.0 - dist * 2.0;
+                        alpha *= sin(time * 0.01) * 0.5 + 0.5;
+                        
+                        gl_FragColor = vec4(vColor * (1.0 + sin(time * 0.01)), alpha);
+                    }
+                `,
+                transparent: true,
+                vertexColors: true
+            });
+            
+            particleSystem = new THREE.Points(geometry, material);
+            scene.add(particleSystem);
+            
+            camera.position.z = 500;
+            
+            animate();
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const time = Date.now();
+            
+            if (particleSystem) {
+                particleSystem.material.uniforms.time.value = time;
+                particleSystem.material.uniforms.mouse.value.x = mouseX;
+                particleSystem.material.uniforms.mouse.value.y = mouseY;
+                particleSystem.rotation.x += 0.001;
+                particleSystem.rotation.y += 0.002;
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        // Mouse tracking
+        document.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+            mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+        });
+        
+        // Resize handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
+        
+        // Sidebar section toggle
+        function toggleSection(header) {
+            const content = header.nextElementSibling;
+            const icon = header.querySelector('span:last-child');
+            
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                icon.textContent = '[-]';
+            } else {
+                content.style.display = 'none';
+                icon.textContent = '[+]';
+            }
+        }
+        
+        // Popup system
+        function showPopup(type) {
+            const overlay = document.querySelector('.popup-overlay');
+            const popup = document.getElementById('popup');
+            const content = document.getElementById('popup-content');
+            
+            let popupContent = '';
+            
+            switch(type) {
+                case 'access':
+                    popupContent = `
+                        <h3>ACCESS_LOGS.dat</h3>
+                        <div class="scrollbox">
+                            <div>[UNAUTHORIZED] IP: 192.168.7.1 - BLOCKED</div>
+                            <div>[GHOST_MODE] Phantom access detected</div>
+                            <div>[INTRUSION] Neural pattern bypass</div>
+                            <div>[SUCCESS] Ghost protocol initialized</div>
+                            <div>[QUANTUM] Tunnel established to void</div>
+                        </div>
+                    `;
+                    break;
+                case 'camera':
+                    popupContent = `
+                        <h3>CAMERA_HIJACK.exe</h3>
+                        <p>Active camera feeds: 247</p>
+                        <p>Hijacked nodes: 189</p>
+                        <div class="ascii-art">
+█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█
+█ LIVE FEED 001 █
+█               █
+█  ░░░░░░░░░░░  █
+█  ░██░░░░░██░  █
+█  ░░░░██░░░░░  █
+█  ░██████████░ █
+█               █
+█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█
+                        </div>
+                    `;
+                    break;
+                case 'img1':
+                    popupContent = `
+                        <h3>VOID_TRANSMISSION_001</h3>
+                        <div class="ascii-art" style="font-size: 0.5rem;">
+    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+    ░░██████████████████████████████████████████████████████████░░
+    ░░██                                                      ██░░
+    ░░██  ████████████████████████████████████████████████    ██░░
+    ░░██  ██                                            ██    ██░░
+    ░░██  ██  ████████████████████████████████████████  ██    ██░░
+    ░░██  ██  ██                                    ██  ██    ██░░
+    ░░██  ██  ██  ████████████████████████████████  ██  ██    ██░░
+    ░░██  ██  ██  ██                            ██  ██  ██    ██░░
+    ░░██  ██  ██  ██  ████████████████████████  ██  ██  ██    ██░░
+    ░░██  ██  ██  ██  ██                    ██  ██  ██  ██    ██░░
+    ░░██  ██  ██  ██  ██  ████████████████  ██  ██  ██  ██    ██░░
+    ░░██  ██  ██  ██  ██  ██            ██  ██  ██  ██  ██    ██░░
+    ░░██  ██  ██  ██  ██  ██  ████████  ██  ██  ██  ██  ██    ██░░
+    ░░██  ██  ██  ██  ██  ██  ██    ██  ██  ██  ██  ██  ██    ██░░
+    ░░██  ██  ██  ██  ██  ██  ██  ██  ██  ██  ██  ██  ██    ██░░
+    ░░██  ██  ██  ██  ██  ██  ████████  ██  ██  ██  ██  ██    ██░░
+    ░░██  ██  ██  ██  ██  ██            ██  ██  ██  ██  ██    ██░░
+    ░░██  ██  ██  ██  ██  ████████████████  ██  ██  ██  ██    ██░░
+    ░░██  ██  ██  ██  ██                    ██  ██  ██  ██    ██░░
+    ░░██  ██  ██  ██  ████████████████████████  ██  ██  ██    ██░░
+    ░░██  ██  ██  ██                            ██  ██  ██    ██░░
+    ░░██  ██  ██  ████████████████████████████████  ██  ██    ██░░
+    ░░██  ██  ██                                    ██  ██    ██░░
+    ░░██  ██  ████████████████████████████████████████  ██    ██░░
+    ░░██  ██                                            ██    ██░░
+    ░░██  ████████████████████████████████████████████████    ██░░
+    ░░██                                                      ██░░
+    ░░██████████████████████████████████████████████████████████░░
+    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+                        </div>
+                        <p>FRACTAL_DEPTH: INFINITE</p>
+                        <p>REALITY_STATUS: CORRUPTED</p>
+                    `;
+                    break;
+                default:
+                    popupContent = `<h3>CLASSIFIED</h3><p>Access denied. Ghost protocol required.</p>`;
+            }
+            
+            content.innerHTML = popupContent;
+            overlay.classList.add('active');
+            popup.classList.add('active');
+        }
+        
+        function closePopup() {
+            document.querySelector('.popup-overlay').classList.remove('active');
+            document.getElementById('popup').classList.remove('active');
+        }
+        
+        // Terminal commands
+        function handleTerminal(event) {
+            if (event.key === 'Enter') {
+                const input = event.target.value;
+                const output = document.getElementById('terminal-output');
+                
+                output.innerHTML += `<div>ghost@shinjuku:~$ ${input}</div>`;
+                
+                switch(input.toLowerCase()) {
+                    case 'help':
+                        output.innerHTML += `<div>Available commands:</div>
+                        <div>  ghost - Activate ghost protocol</div>
+                        <div>  hijack - Hijack camera feeds</div>
+                        <div>  scan - Scan for vulnerabilities</div>
+                        <div>  encrypt - Encrypt communications</div>
+                        <div>  void - Access void space</div>
+                        <div>  clear - Clear terminal</div>`;
+                        break;
+                    case 'ghost':
+                        output.innerHTML += `<div style="color: #0f0;">[GHOST_PROTOCOL_ACTIVATED]</div>
+                        <div>Phasing through digital barriers...</div>
+                        <div>Reality anchor: DISABLED</div>
+                        <div>Quantum signature: OBFUSCATED</div>`;
+                        break;
+                    case 'hijack':
+                        output.innerHTML += `<div>Scanning for camera feeds...</div>
+                        <div>Found 847 active nodes</div>
+                        <div style="color: #0f0;">Successfully hijacked 189 feeds</div>
+                        <div>Converting to interactive narratives...</div>`;
+                        break;
+                    case 'clear':
+                        output.innerHTML = `<div>SIGNAL_GHOST Terminal v2.7.3</div>
+                        <div>Type 'help' for available commands</div>
+                        <div></div>`;
+                        break;
+                    default:
+                        output.innerHTML += `<div style="color: #f00;">Command not found: ${input}</div>`;
+                }
+                
+                output.innerHTML += `<div>ghost@shinjuku:~$ <span class="blink">_</span></div>`;
+                output.scrollTop = output.scrollHeight;
+                event.target.value = '';
+            }
+        }
+        
+        // Command handler for logs tab
+        function handleCommand(event) {
+            if (event.key === 'Enter') {
+                const input = event.target.value;
+                const logs = document.getElementById('log-container');
+                
+                const time = new Date().toTimeString().substring(0, 8);
+                logs.innerHTML += `<div>[${time}] Command executed: ${input}</div>`;
+                logs.innerHTML += `<div>[${time}] <span style="color: #0f0;">[SUCCESS]</span> Ghost protocol response</div>`;
+                
+                logs.scrollTop = logs.scrollHeight;
+                event.target.value = '';
+            }
+        }
+        
+        // Uptime counter
+        let startTime = Date.now();
+        function updateUptime() {
+            const elapsed = Date.now() - startTime;
+            const hours = Math.floor(elapsed / 3600000).toString().padStart(2, '0');
+            const minutes = Math.floor((elapsed % 3600000) / 60000).toString().padStart(2, '0');
+            const seconds = Math.floor((elapsed % 60000) / 1000).toString().padStart(2, '0');
+            
+            document.getElementById('uptime').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+        
+        // Auto-updating logs
+        function addRandomLog() {
+            const logs = document.getElementById('log-container');
+            const time = new Date().toTimeString().substring(0, 8);
+            const events = [
+                'Neural pattern detected in sector 7',
+                'Quantum tunnel fluctuation observed',
+                'Camera feed hijack successful',
+                'Ghost signature amplified',
+                'Reality corruption level: MINIMAL',
+                'Liminal space accessed',
+                'Data packet intercepted',
+                'Surveillance override activated'
+            ];
+            
+            const event = events[Math.floor(Math.random() * events.length)];
+            logs.innerHTML += `<div>[${time}] ${event}</div>`;
+            logs.scrollTop = logs.scrollHeight;
+        }
+        
+        // Initialize everything
+        window.addEventListener('load', () => {
+            initThree();
+            setInterval(updateUptime, 1000);
+            setInterval(addRandomLog, 5000);
+        });
+    </script>
+</body>
+</html>
